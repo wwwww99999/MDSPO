@@ -60,10 +60,8 @@ class Agent:
 
         self.lam += self.lam_lr * (torch.mean(torch.exp(old_log_prob_k_0_5 - old_log_prob_k) * c_adv).item() +
                                    (1 - self.c_gamma) * (j_c - self.cost_threshold))
-        # self.lam += self.lam_lr * (j_c - self.cost_threshold)
         self.lam = max(self.lam, 0)
         self.lam = min(self.lam, self.lam_max)
-        # print(self.lam)
 
         dataset_2 = TensorDataset(states, actions, c_adv,
                                   old_log_prob_k, old_mu_k_0_5, old_std_k_0_5)
@@ -90,23 +88,24 @@ class Agent:
         dataset_3 = TensorDataset(states, td_r_target, td_c_target)
         loader_3 = DataLoader(dataset=dataset_3, batch_size=self.minibatch, shuffle=True)
 
-        for _, (states_b, td_r_target_b, td_c_target_b) in enumerate(loader_3):
+        for i in range(self.epoch):
+            for _, (states_b, td_r_target_b, td_c_target_b) in enumerate(loader_3):
 
-            # Update reward critic
-            r_value_loss = torch.mean(F.mse_loss(self.r_value(states_b), td_r_target_b))
-            for param in self.r_value.parameters():
-                r_value_loss += param.pow(2).sum() * self.l2_reg
-            self.r_value_optimizer.zero_grad()
-            r_value_loss.backward()
-            self.r_value_optimizer.step()
+                # Update reward critic
+                r_value_loss = torch.mean(F.mse_loss(self.r_value(states_b), td_r_target_b))
+                for param in self.r_value.parameters():
+                    r_value_loss += param.pow(2).sum() * self.l2_reg
+                self.r_value_optimizer.zero_grad()
+                r_value_loss.backward()
+                self.r_value_optimizer.step()
 
-            # Update cost critic
-            c_value_loss = torch.mean(F.mse_loss(self.c_value(states_b), td_c_target_b))
-            for param in self.c_value.parameters():
-                c_value_loss += param.pow(2).sum() * self.l2_reg
-            self.c_value_optimizer.zero_grad()
-            c_value_loss.backward()
-            self.c_value_optimizer.step()
+                # Update cost critic
+                c_value_loss = torch.mean(F.mse_loss(self.c_value(states_b), td_c_target_b))
+                for param in self.c_value.parameters():
+                    c_value_loss += param.pow(2).sum() * self.l2_reg
+                self.c_value_optimizer.zero_grad()
+                c_value_loss.backward()
+                self.c_value_optimizer.step()
 
 def gaussian_kl(mean1, std1, mean2, std2):
     normal1 = Normal(mean1, std1)
@@ -116,7 +115,4 @@ def gaussian_kl(mean1, std1, mean2, std2):
 
 def exceed_kl_bound(policy, states, actions, old_mu, old_std, target_kl):
     _, mu, std = policy.log_prob(states, actions, True)
-    if gaussian_kl(mu, std, old_mu, old_std).mean().item() > target_kl:
-        return True
-    else:
-        return False
+    return gaussian_kl(mu, std, old_mu, old_std).mean().item() > target_kl
