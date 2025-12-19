@@ -1,4 +1,3 @@
-import random
 import torch
 from train import train
 
@@ -25,7 +24,7 @@ if __name__ == '__main__':
     cost_threshold = 25
     activation = 'tanh'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    for seed in random.sample(range(1, 100), 5):
+    for seed in range(5):
         train(env_name, batch_size, gae_r_lambda, gae_c_lambda, r_gamma, c_gamma, max_iter_num,
              epoch, minibatch, policy_lr, r_value_lr, c_value_lr, l2_reg, hidden_dim, eta_kl,
              target_kl, lam, lam_max, lam_lr, cost_threshold, seed, activation, device)
