@@ -2,7 +2,7 @@ import torch
 from train import train
 
 if __name__ == '__main__':
-    env_name = 'SafetyCarGoal2-v0'
+    env_name = 'SafetyCarCircle2-v0'
     batch_size = 20000
     gae_r_lambda = 0.95
     gae_c_lambda = 0.95
