@@ -41,7 +41,7 @@ class GaussianPolicy(nn.Module):
         mu, std = self.forward(state)
         action_dist = torch.distributions.Normal(mu, std)
         action = action_dist.sample()
-        return action.detach().cpu().numpy().squeeze()
+        return action.detach().cpu().numpy().squeeze(0)
 
 
     def log_prob(self, states, actions, old):
